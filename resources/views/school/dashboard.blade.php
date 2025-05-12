@@ -163,7 +163,7 @@
                     <th>Content</th>
                     <th>Type</th>
                     <th>Date Created</th>
-                    <th>Actions</th>
+             
                 </tr>
             </thead>
             <tbody>
@@ -172,11 +172,6 @@
                     <td>{{ $activity['title'] }}</td>
                     <td>{{ $activity['type'] }}</td>
                     <td>{{ $activity['date'] }}</td>
-                   
-                    <td>
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download"></i></a>
-                    </td>
                 </tr>
                 @endforeach
             </tbody>

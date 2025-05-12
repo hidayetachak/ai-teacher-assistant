@@ -15,7 +15,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\ResourceController;
-use App\Http\Controllers\Backend\PackageController as BackendPackageController;
+use App\Http\Controllers\PackageController;
 use App\Http\Middleware\VerifyRole;
 use Illuminate\Support\Facades\Route;
 
@@ -83,17 +83,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.update.user');
 
          // Package routes
-    Route::get('/packages', [BackendPackageController::class, 'index'])->name('packages.index');
-    Route::get('/packages/create', [BackendPackageController::class, 'create'])->name('packages.create');
-    Route::post('/packages', [BackendPackageController::class, 'store'])->name('packages.store');
-    Route::get('/packages/{package}/edit', [BackendPackageController::class, 'edit'])->name('packages.edit');
-    Route::put('/packages/{package}', [BackendPackageController::class, 'update'])->name('packages.update');
-    Route::delete('/packages/{package}', [BackendPackageController::class, 'destroy'])->name('packages.destroy');
+    Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+    Route::get('/packages/create', [PackageController::class, 'create'])->name('packages.create');
+    Route::post('/packages', [PackageController::class, 'store'])->name('packages.store');
+    Route::get('/packages/{package}/edit', [PackageController::class, 'edit'])->name('packages.edit');
+    Route::put('/packages/{package}', [PackageController::class, 'update'])->name('packages.update');
+    Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('packages.destroy');
     
     // AJAX routes for status updates
-    Route::put('/packages/{package}/update-status', [BackendPackageController::class, 'updateStatus'])
+    Route::put('/packages/{package}/update-status', [PackageController::class, 'updateStatus'])
         ->name('packages.update-status');
-    Route::put('/packages/{package}/feature-update-status', [BackendPackageController::class, 'featureupdateStatus'])
+    Route::put('/packages/{package}/feature-update-status', [PackageController::class, 'featureupdateStatus'])
         ->name('packages.feature-update-status');
     });
 
