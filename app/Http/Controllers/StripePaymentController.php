@@ -160,16 +160,7 @@ class StripePaymentController extends Controller
             Session::flash('success', 'Your Payment was Successful');
             Session::put('payment_id', $paymentRecord->id);
     
-            try {
-                Mail::to($user->email)->send(new StripeAdvertPublishedMail(
-                    $user->name,
-                    $package->title,
-                    $finalPrice,
-                    now()->addDays($duration)->format('F j, Y')
-                ));
-            } catch (\Exception $e) {
-                \Log::error('Failed to send email: ' . $e->getMessage());
-            }
+        
     
             return back();
     
