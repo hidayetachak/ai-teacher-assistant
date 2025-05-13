@@ -10,6 +10,25 @@
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="dashboard-card">
             <div class="card-icon primary">
+                <i class="fas fa-brain text-danger"></i>
+            </div>
+            <p class="card-title">Resources</p>
+            <h3 class="card-value">{{ $resourceCount }}</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                @if($resourcePercentChange > 0)
+                    <span class="text-success"><i class="fas fa-arrow-up"></i> {{ $resourcePercentChange }}% this week</span>
+                @elseif($resourcePercentChange < 0)
+                    <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ abs($resourcePercentChange) }}% this week</span>
+                @else
+                    <span class="text-muted"><i class="fas fa-minus"></i> 0% this week</span>
+                @endif
+                <a href="{{ route('content.resource') }}" class="text-primary">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="dashboard-card">
+            <div class="card-icon primary">
                 <i class="fas fa-book-open"></i>
             </div>
             <p class="card-title">Lesson Plans</p>
@@ -63,50 +82,33 @@
                 @else
                     <span class="text-muted"><i class="fas fa-minus"></i> 0% this week</span>
                 @endif
-                <a href="#" class="text-primary">View All</a>
+                <a href="{{ route('content.assignment') }}" class="text-primary">View All</a>
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="dashboard-card">
-        <div class="card-icon text-white" style="background-color:rgb(237, 160, 160);">
-    <i class="fas fa-coins"></i>
-</div>
-
-            <p class="card-title">Credits</p>
-            <h3 class="card-value">{{ $subscriptionStatus }}</h3>
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted">Current Plan</span>
-                <a href="#" class="text-primary">Upgrade</a>
-            </div>
-        </div>
-    </div>
+        
 </div>
 
 <!-- Quick Actions -->
 <div class="dashboard-card mb-4">
     <h5 class="mb-4">Quick Actions</h5>
     <div class="quick-actions">
-        <a href="{{ route('content.create.lesson-plan') }}" class="quick-action-btn">
-            <i class="fas fa-book-open text-primary"></i>
-            <span>Create Lesson Plan</span>
-        </a>
-        <a href="{{ route('content.create.quiz') }}" class="quick-action-btn">
-            <i class="fas fa-question-circle text-success"></i>
-            <span>Create Quiz</span>
-        </a>
-        <!-- <a href="#" class="quick-action-btn">
-            <i class="fas fa-plus-circle text-warning"></i>
-            <span>Add Student</span>
-        </a> -->
-        <a href="{{ route('content.create.assignment') }}" class="quick-action-btn">
-            <i class="fas fa-clipboard-check text-info"></i>
-            <span>Create Assignment</span>
-        </a>
-        <!-- <a href="#" class="quick-action-btn">
-            <i class="fas fa-calendar-plus text-danger"></i>
-            <span>Schedule Class</span>
-        </a> -->
+                 <a href="{{ route('content.create.assignment') }}" class="quick-action-btn">
+                    <i class="fas fa-brain text-danger"></i>
+                    <span>Resource Generator</span>
+                </a>
+                <a href="{{ route('content.create.lesson-plan') }}" class="quick-action-btn">
+                    <i class="fas fa-book-open text-primary"></i>
+                    <span>Create Lesson Plan</span>
+                </a>
+                <a href="{{ route('content.create.quiz') }}" class="quick-action-btn">
+                    <i class="fas fa-question-circle text-success"></i>
+                    <span>Create Quiz</span>
+                </a>
+                <a href="{{ route('content.create.assignment') }}" class="quick-action-btn">
+                    <i class="fas fa-clipboard-check text-info"></i>
+                    <span>Create Assignment</span>
+                </a>
     </div>
 </div>
 
@@ -143,7 +145,7 @@
                     <th>Content</th>
                     <th>Type</th>
                     <th>Date Created</th>
-                    <th>Actions</th>
+            
                 </tr>
             </thead>
             <tbody>
@@ -153,10 +155,7 @@
                     <td>{{ $activity['type'] }}</td>
                     <td>{{ $activity['date'] }}</td>
                    
-                    <td>
-                        <a href="#" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
-                    </td>
+                   
                 </tr>
                 @endforeach
             </tbody>
@@ -171,21 +170,40 @@ var activityChart = new Chart(activityCtx, {
     type: 'line',
     data: {
         labels: {!! json_encode($monthlyData['months']) !!},
-        datasets: [{
-            label: 'Lesson Plans',
-            data: {!! json_encode($monthlyData['lessonData']) !!},
-            borderColor: '#4361ee',
-            backgroundColor: 'rgba(67, 97, 238, 0.1)',
-            tension: 0.4,
-            fill: true
-        }, {
-            label: 'Quizzes',
-            data: {!! json_encode($monthlyData['quizData']) !!},
-            borderColor: '#4cc9f0',
-            backgroundColor: 'rgba(76, 201, 240, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
+        datasets: [
+            {
+                label: 'Lesson Plans',
+                data: {!! json_encode($monthlyData['lessonData']) !!},
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Quizzes',
+                data: {!! json_encode($monthlyData['quizData']) !!},
+                borderColor: '#4cc9f0',
+                backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Resources',
+                data: {!! json_encode($monthlyData['resourceData']) !!},
+                borderColor: '#3cb371',
+                backgroundColor: 'rgba(60, 179, 113, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Assignments',
+                data: {!! json_encode($monthlyData['assignmentData']) !!},
+                borderColor: '#f72585',
+                backgroundColor: 'rgba(247, 37, 133, 0.1)',
+                tension: 0.4,
+                fill: true
+            }
+        ]
     },
     options: {
         responsive: true,
@@ -225,19 +243,19 @@ var distributionCtx = document.getElementById('contentDistributionChart').getCon
 var distributionChart = new Chart(distributionCtx, {
     type: 'doughnut',
     data: {
-        labels: ['Lesson Plans', 'Quizzes', 'Assignments'],
+        labels: ['Lesson Plans', 'Quizzes', 'Assignments', 'Resources'],
         datasets: [{
             data: [
-                {{ $contentDistribution['lessonCount'] }}, 
-                {{ $contentDistribution['quizCount'] }}, 
-                {{ $contentDistribution['assignmentCount'] }}, 
-             
+                {{ $contentDistribution['lessonCount'] }},
+                {{ $contentDistribution['quizCount'] }},
+                {{ $contentDistribution['assignmentCount'] }},
+                {{ $contentDistribution['resourceCount'] }},
             ],
             backgroundColor: [
                 '#4361ee',
                 '#4cc9f0',
                 '#f72585',
-         
+                '#3cb371'
             ],
             borderWidth: 0
         }]

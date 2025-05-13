@@ -34,8 +34,11 @@ class LoginController extends Controller
             if (Auth::user()->role === 'admin') {
                 return redirect()->route('admin.dashboard');
             }
+            if (Auth::user()->role === 'school') {
+                return redirect()->route('school.dashboard');
+            }
             
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard.teacher');
         }
         
         Log::info('Failed login attempt for email: ' . $request->email);

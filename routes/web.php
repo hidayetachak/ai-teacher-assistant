@@ -48,33 +48,33 @@ Route::middleware('auth')->group(function () {
         if ($role === 'school') return redirect()->route('school.dashboard');
         return redirect()->route('dashboard');
     });
-    
+    Route::get('/lesson-plan', [LessonController::class, 'index'])->name('content.lesson-plan');
+    Route::get('/create-lesson-plan', [LessonController::class, 'create'])->name('content.create.lesson-plan');
+    Route::post('/lesson-plan', [ContentController::class, 'lessonPlan']);
+
+    Route::get('/resources', [ResourceController::class, 'index'])->name('content.resource');
+    Route::get('/create-resource', [ResourceController::class, 'create'])->name('content.create.resource');
+    Route::post('/resources', [ContentController::class, 'resourceKit']);
+
+    Route::get('/quizzes', [QuizController::class, 'index'])->name('content.quiz');
+    Route::get('/create-quiz', [QuizController::class, 'create'])->name('content.create.quiz');
+    Route::post('/quizzes', [ContentController::class, 'quiz'])->name('quizzes.store');
+
+    Route::get('/assignments', [AssignmentController::class, 'index'])->name('content.assignment');
+    Route::get('/create-assignment', [AssignmentController::class, 'create'])->name('content.create.assignment');
+    Route::post('/assignment', [ContentController::class, 'assignment'])->name('assignment.store');
+
+    Route::get('/content/{content}/export/pdf', [ContentController::class, 'exportPdf'])->name('content.export.pdf');
+
+    Route::get('/content/{id}/view', [ContentController::class, 'view'])->name('content.view');
+    Route::delete('/content/{id}', [ContentController::class, 'destroy'])->name('content.destroy');
 
     // Direct use of middleware class instead of alias
     
     // Teacher and User Routes
     Route::middleware(VerifyRole::class . ':teacher')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/lesson-plan', [LessonController::class, 'index'])->name('content.lesson-plan');
-        Route::get('/create-lesson-plan', [LessonController::class, 'create'])->name('content.create.lesson-plan');
-        Route::post('/lesson-plan', [ContentController::class, 'lessonPlan']);
-    
-        Route::get('/resources', [ResourceController::class, 'index'])->name('content.resource');
-        Route::get('/create-resource', [ResourceController::class, 'create'])->name('content.create.resource');
-        Route::post('/resources', [ContentController::class, 'resourceKit']);
-
-        Route::get('/quizzes', [QuizController::class, 'index'])->name('content.quiz');
-        Route::get('/create-quiz', [QuizController::class, 'create'])->name('content.create.quiz');
-        Route::post('/quizzes', [ContentController::class, 'quiz'])->name('quizzes.store');
-    
-        Route::get('/assignments', [AssignmentController::class, 'index'])->name('content.assignment');
-        Route::get('/create-assignment', [AssignmentController::class, 'create'])->name('content.create.assignment');
-        Route::post('/assignment', [ContentController::class, 'assignment'])->name('assignment.store');
-
-        Route::get('/content/{content}/export/pdf', [ContentController::class, 'exportPdf'])->name('content.export.pdf');
-    
-        Route::get('/content/{id}/view', [ContentController::class, 'view'])->name('content.view');
-        Route::delete('/content/{id}', [ContentController::class, 'destroy'])->name('content.destroy');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.teacher');
+      
     });
 
     // Admin Routes
@@ -111,26 +111,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/school/teachers/{teacher}', [SchoolController::class, 'updateTeacher'])->name('school.teachers.update');
         Route::delete('/school/teachers/{teacher}', [SchoolController::class, 'deleteTeacher'])->name('school.teachers.delete');
 
-        Route::get('/lesson-plan', [LessonController::class, 'index'])->name('content.lesson-plan');
-        Route::get('/create-lesson-plan', [LessonController::class, 'create'])->name('content.create.lesson-plan');
-        Route::post('/lesson-plan', [ContentController::class, 'lessonPlan']);
-    
-        Route::get('/resources', [ResourceController::class, 'index'])->name('content.resource');
-        Route::get('/create-resource', [ResourceController::class, 'create'])->name('content.create.resource');
-        Route::post('/resources', [ContentController::class, 'resourceKit']);
-
-        Route::get('/quizzes', [QuizController::class, 'index'])->name('content.quiz');
-        Route::get('/create-quiz', [QuizController::class, 'create'])->name('content.create.quiz');
-        Route::post('/quizzes', [ContentController::class, 'quiz'])->name('quizzes.store');
-    
-        Route::get('/assignments', [AssignmentController::class, 'index'])->name('content.assignment');
-        Route::get('/create-assignment', [AssignmentController::class, 'create'])->name('content.create.assignment');
-        Route::post('/assignment', [ContentController::class, 'assignment'])->name('assignment.store');
         
-
-     
-        Route::get('/content/{id}/view', [ContentController::class, 'view'])->name('content.view');
-        Route::delete('/content/{id}', [ContentController::class, 'destroy'])->name('content.destroy');
 
         //subscription 
         Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscriptions.index');

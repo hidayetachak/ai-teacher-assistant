@@ -124,7 +124,7 @@
             <h3 class="card-value">{{ $subscriptionStatus }}</h3>
             <div class="d-flex justify-content-between align-items-center">
                 <span class="text-muted">Current Plan</span>
-                <a href="#" class="text-primary">Upgrade</a>
+                <a href="{{ route('subscriptions.index') }}" class="text-primary">Upgrade</a>
             </div>
         </div>
     </div>
@@ -163,7 +163,6 @@
                     <th>Content</th>
                     <th>Type</th>
                     <th>Date Created</th>
-             
                 </tr>
             </thead>
             <tbody>

@@ -1,8 +1,8 @@
-@extends('layouts.schoolDashboard')
+@extends('layouts.dashboard')
 
-@section('title', 'Dashboard')
+@section('title', 'Teacher Dashboard')
 
-@section('page-title', 'Dashboard')
+@section('page-title', 'Teacher Dashboard')
 
 @section('dashboard-content')
 <div class="container py-5">

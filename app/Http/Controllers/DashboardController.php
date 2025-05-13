@@ -19,6 +19,9 @@ class DashboardController extends Controller
         // Get the currently authenticated user
         $user = auth()->user();
         
+        $resourceCount = Usage::where('user_id', $user->id)
+        ->where('type', 'resource')
+        ->count();
         // Count lessons created by the user
         $lessonsCount = Usage::where('user_id', $user->id)
             ->where('type', 'lesson_plan')
@@ -35,6 +38,7 @@ class DashboardController extends Controller
             ->count();
             
         // Calculate weekly percentage changes
+        $resourcePercentChange = $this->calculateWeeklyChange($user->id, 'resource');
         $lessonsPercentChange = $this->calculateWeeklyChange($user->id, 'lesson_plan');
         $quizzesPercentChange = $this->calculateWeeklyChange($user->id, 'quiz');
         $assignmentsPercentChange = $this->calculateWeeklyChange($user->id, 'assignment');
@@ -52,9 +56,11 @@ class DashboardController extends Controller
         $recentActivities = $this->getRecentActivities($user->id, 5);
         
         return view('teacher.dashboard', compact(
+            'resourceCount', 
             'lessonsCount', 
             'quizzesCount', 
             'assignmentCount', 
+            'resourcePercentChange',
             'lessonsPercentChange',
             'quizzesPercentChange',
             'assignmentsPercentChange',
@@ -106,6 +112,8 @@ class DashboardController extends Controller
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $currentYear = Carbon::now()->year;
         
+        $resourceData = [];
+        $assignmentData = [];
         $lessonData = [];
         $quizData = [];
         
@@ -114,6 +122,10 @@ class DashboardController extends Controller
             $startDate = Carbon::createFromDate($currentYear, $month + 1, 1)->startOfMonth();
             $endDate = Carbon::createFromDate($currentYear, $month + 1, 1)->endOfMonth();
             
+            $resourceCount = Usage::where('user_id', $userId)
+                ->where('type', 'resource')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
             // Get lesson count for this month
             $lessonCount = Usage::where('user_id', $userId)
                 ->where('type', 'lesson_plan')
@@ -125,17 +137,25 @@ class DashboardController extends Controller
                 ->where('type', 'quiz')
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
-                
+                $assignmentCount = Usage::where('user_id', $userId)
+                ->where('type', 'assignment') 
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+            
+            $resourceData[$month] = $resourceCount;
             $lessonData[$month] = $lessonCount;
             $quizData[$month] = $quizCount;
+            $assignmentData[$month] = $assignmentCount;
         }
         
       
         
         return [
             'months' => $months,
+            'resourceData' => array_values($resourceData),
             'lessonData' => array_values($lessonData),
-            'quizData' => array_values($quizData)
+            'quizData' => array_values($quizData),
+            'assignmentData' => array_values($assignmentData),
         ];
     }
     
@@ -156,8 +176,8 @@ class DashboardController extends Controller
             ->where('type', 'assignment')
             ->count();
             
-        $notesCount = Usage::where('user_id', $userId)
-            ->where('type', 'notes')
+        $resourceCount = Usage::where('user_id', $userId)
+            ->where('type', 'resource')
             ->count();
             
        
@@ -166,7 +186,7 @@ class DashboardController extends Controller
             'lessonCount' => $lessonCount,
             'quizCount' => $quizCount,
             'assignmentCount' => $assignmentCount,
-            'notesCount' => $notesCount
+            'resourceCount' => $resourceCount
         ];
     }
     

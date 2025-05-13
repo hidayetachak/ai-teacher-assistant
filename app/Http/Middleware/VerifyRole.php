@@ -46,7 +46,7 @@ class VerifyRole
         if (Auth::user()->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }if (Auth::user()->role === 'teacher') {
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard.teacher');
         }
         if (Auth::user()->role === 'school') {
             return redirect()->route('school.dashboard');

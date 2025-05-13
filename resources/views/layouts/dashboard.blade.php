@@ -371,8 +371,13 @@
             
             <ul class="sidebar-menu">
                 <li>
-                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard.teacher') }}" class="{{ request()->routeIs('dashboard.teacher') ? 'active' : '' }}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('content.resource') }}" class="{{ request()->routeIs('content.resource') ? 'active' : '' }}">
+                        <i class="fas fa-brain"></i> Resource Generator
                     </a>
                 </li>
                 <li>
