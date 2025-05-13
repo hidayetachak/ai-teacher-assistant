@@ -258,13 +258,31 @@
         }
         
         .toggle-sidebar {
-            background: none;
-            border: none;
-            color: var(--dark-color);
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: none;
-        }
+    background: none;
+    border: none;
+    color: var(--dark-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: none;
+    position: fixed; 
+    top: 20px;
+    right: 5px;
+    z-index: 1100; 
+    padding: 10px;
+    background-color: var(--primary-color); 
+    border-radius: 5px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.toggle-sidebar:hover {
+    background-color: var(--secondary-color);
+}
+@media (max-width: 992px) {
+    .toggle-sidebar {
+        display: block; /* Ensure it appears on mobile */
+    }
+}
         
         /* Table Styles */
         .custom-table {
@@ -443,7 +461,7 @@
                     </button>
                     <h4 class="d-inline-block mb-0">@yield('page-title', 'Dashboard')</h4>
                 </div>
-                <div class="user-profile">
+                <div class="user-profile d-none d-md-block">
                     <div class="dropdown">
                         <a href="#" class="text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                           

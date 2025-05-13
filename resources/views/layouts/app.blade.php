@@ -27,7 +27,7 @@
                 <li><a href="#testimonials">Testimonials</a></li>
                 <li><a href="#faq">FAQ</a></li>
                 @auth
-                <li><a href="{{ route('login') }}" class="btn btn-outline">Dashboard</a></li>
+                <li><a href="{{ route('school.dashboard') }}" class="btn btn-outline">Dashboard</a></li>
                 @endauth
                 @guest
                 <li><a href="{{ route('login') }}" class="btn btn-outline">Log In</a></li>
