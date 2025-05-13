@@ -374,7 +374,7 @@
             
             <ul class="sidebar-menu">
                 <li>
-                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('school.dashboard') ? 'active' : '' }}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a>
                 </li>
