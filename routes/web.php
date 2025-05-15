@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\QuizController;
@@ -18,7 +17,8 @@ use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\PackageController;
 use App\Http\Middleware\VerifyRole;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Backend\UserController as BackendUserController;
+use App\Http\Controllers\Backend\AdminController as BackendAdminController;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');;
@@ -79,8 +79,8 @@ Route::middleware('auth')->group(function () {
 
     // Admin Routes
     Route::middleware(VerifyRole::class . ':admin')->group(function () {
-        Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-        Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.update.user');
+        Route::get('/admin/dashboard', [BackendAdminController::class, 'index'])->name('admin.dashboard');
+        Route::put('/admin/users/{user}', [BackendAdminController::class, 'updateUser'])->name('admin.update.user');
 
          // Package routes
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
@@ -95,6 +95,12 @@ Route::middleware('auth')->group(function () {
         ->name('packages.update-status');
     Route::put('/packages/{package}/feature-update-status', [PackageController::class, 'featureupdateStatus'])
         ->name('packages.feature-update-status');
+
+        Route::get('/users', [BackendUserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [BackendUserController::class, 'create'])->name('users.create');
+        Route::post('/users', [BackendUserController::class, 'store'])->name('users.store');
+        Route::delete('/users/{id}', [BackendUserController::class, 'destroy'])->name('users.destroy');
+
     });
 
 
@@ -115,6 +121,7 @@ Route::middleware('auth')->group(function () {
 
         //subscription 
         Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::get('/history', [SubscriptionController::class, 'packagehistory'])->name('subscriptions.history');
         Route::controller(StripePaymentController::class)->group(function () {
             Route::get('stripe/{packageId}', 'stripe')->name('stripe.payment');
             Route::post('stripe/{packageId}', 'stripePost')->name('stripe.post');

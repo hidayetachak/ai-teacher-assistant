@@ -13,6 +13,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Package;
+
+use App\Models\PaymentRecord;
 use Illuminate\Support\Facades\Hash;
 
 class SubscriptionController extends Controller{
@@ -29,7 +31,15 @@ class SubscriptionController extends Controller{
         return view('school.subscription', compact('packages'));
     }
         
-
+    public function packagehistory()
+    {
+        
+        $records = PaymentRecord::where('user_id', auth()->id())
+        ->with('package')
+        ->orderBy('created_at', 'desc')
+        ->get();
+        return view('school.history', compact('records'));
+    }
 
 
 }

@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Super Admin Dashboard')
+@section('title', 'Admin Dashboard')
 
-@section('page-title', 'Super Admin Dashboard')
+@section('page-title', 'Admin Dashboard')
 
 @section('dashboard-content')
 <div class="container-fluid py-4">
@@ -43,8 +43,8 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="credits" class="form-label">credits</label>
-                    <input type="number" name="credits" id="credits" class="form-control" placeholder="Enter number of credits" required>
+                    <label for="downloads" class="form-label">Credits</label>
+                    <input type="number" name="downloads" id="downloads" class="form-control" placeholder="Enter number of downloads" required>
                 </div>
 
                 <div class="mb-3">

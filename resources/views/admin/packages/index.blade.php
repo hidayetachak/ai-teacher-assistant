@@ -1,35 +1,37 @@
 @extends('layouts.admin')
 
-@section('title', 'Super Admin Dashboard')
+@section('title', 'Admin Dashboard')
 
-@section('page-title', 'Super Admin Dashboard')
+@section('page-title', 'Admin Dashboard')
 
 @section('dashboard-content')
-<div class="container mt-4">
-    <h1>Packages</h1>
-    <div class="mt-3 d-flex justify-content-end">
-        <a href="{{ route('packages.create') }}" style="background-color:black; color:white; text-decoration:none; padding:10px 12px; border-radius:10px;">
-            <i class="fas fa-plus me-2"></i> Add Package
-        </a>
-    </div>
 
-    <div class="mt-5">
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Packages</h2>
+    <a href="{{ route('packages.create') }}" class="btn btn-primary">
+  <i class="bi bi-plus-lg me-1"></i> Add Package
+</a>
+
+  </div>
+    <div>
         @if($packages->isEmpty())
             <div class="d-flex justify-content-center align-items-center" style="height: 50vh;">
                 <h3 class="text-muted">No package available</h3>
             </div>
         @else
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
+           
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+    <thead class="table-light">
+        <tr>
                             <th>#</th>
                             <th>Title</th>
                             <th>Description</th>
                             <th>Features</th>
                             <th>Price</th>
                             <th>Duration</th>
-                            <th>Subscription</th>
+                       
                             <th>Status</th>
                             <th>Recommend</th>
                             <th>Actions</th>
@@ -44,7 +46,7 @@
                                 <td>{{ $package->features }}</td>
                                 <td>${{ number_format($package->price, 2) }}</td>
                                 <td>{{ $package->duration }} days</td>
-                                <td>{{ $package->recovery_payment }}</td>
+                            
                                 <td>
                                     <div class="Recomended">
                                         <div class="form-check form-switch">

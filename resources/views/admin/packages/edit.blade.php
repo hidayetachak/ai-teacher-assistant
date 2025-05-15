@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Super Admin Dashboard')
+@section('title', 'Admin Dashboard')
 
-@section('page-title', 'Super Admin Dashboard')
+@section('page-title', 'Admin Dashboard')
 
 @section('dashboard-content')
 <div class="container-fluid py-4">
@@ -47,8 +47,8 @@
                         <input type="number" name="duration" id="duration" class="form-control" value="{{ old('duration', $package->duration) }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label for="credits" class="form-label">credits</label>
-                        <input type="number" name="credits" id="credits" class="form-control" value="{{ old('credits', $package->credits) }}" required>
+                        <label for="downloads" class="form-label">Credits</label>
+                        <input type="number" name="downloads" id="downloads" class="form-control" value="{{ old('downloads', $package->downloads) }}" required>
                     </div>
                     <div class="col-md-4">
                         <label for="is_active" class="form-label">Status</label>

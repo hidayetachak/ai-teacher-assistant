@@ -372,23 +372,22 @@
         </a>
 
             
-            <ul class="sidebar-menu">
+        <ul class="sidebar-menu">
                 <li>
                     <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a>
                 </li>
                 <li>
-                    <a href="{{route('packages.index')}}" class="{{ request()->routeIs('content.lesson-plan') ? 'active' : '' }}">
-                        <i class="fas fa-book-open"></i>Packages
+                    <a href="{{ route('packages.index') }}" class="{{ request()->routeIs('packages.index') ? 'active' : '' }}">
+                        <i class="fas fa-box"></i>Packages
                     </a>
                 </li>
-              
-
-              
-
-              
-               
+                <li>
+                    <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.index') ? 'active' : '' }}">
+                        <i class="fas fa-user-plus"></i> Users
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}">
                         <i class="fas fa-user-circle"></i> Profile

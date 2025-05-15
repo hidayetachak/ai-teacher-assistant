@@ -39,7 +39,7 @@
 <div class="container py-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Subscription</h2>
-    <a href="" class="btn btn-primary">
+    <a href="{{ route('subscriptions.history') }}" class="btn btn-primary">
       <i class="bi bi-clock-history me-1"></i> History
     </a>
   </div>

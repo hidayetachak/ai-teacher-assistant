@@ -12,7 +12,9 @@ class ProfileController extends Controller
       
         $authUser = auth()->user();
     
-       
+        if ($authUser->role=='admin') {
+            return view('admin.profile', ['user' => auth()->user()]);
+        }
         if ($authUser->role=='school') {
             return view('school.profile', ['user' => auth()->user()]);
         }
