@@ -26,7 +26,7 @@
             </div>
             <div class="mb-3">
                 <label for="grade_level" class="form-label">Grade Level</label>
-                <select class="form-select @error('grade_level') is-invalid @enderror" id="grade_level" name="grade_level" required>
+                <select class="form-select @error('grade_level') is-invalid @enderror" id="grade_level" name="grade_level">
                     <option value="">-- Select Grade --</option>
                     <option value="K-2">K-2</option>
                     <option value="3-5">3-5</option>
@@ -50,9 +50,4 @@
     </div>
 </div>
 
-<script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
-}
-</script>
 @endsection

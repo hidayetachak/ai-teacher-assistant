@@ -55,7 +55,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/resources', [ResourceController::class, 'index'])->name('content.resource');
     Route::get('/create-resource', [ResourceController::class, 'create'])->name('content.create.resource');
-    Route::post('/resources', [ContentController::class, 'resourceKit'])->name('resource.store');
+    Route::post('/resources', [ContentController::class, 'resourceKit'])->name('c');
 
     Route::get('/quizzes', [QuizController::class, 'index'])->name('content.quiz');
     Route::get('/create-quiz', [QuizController::class, 'create'])->name('content.create.quiz');
