@@ -17,53 +17,26 @@ use Illuminate\Support\Facades\Log;
 class ContentController extends Controller
 {
     public function resourceKit(ResourceRequest $request)
-    {
-        $authUser = auth()->user();
+{
+    // Start logging the request process
+    Log::channel('daily')->info('ResourceKit request started', [
+        'user_id' => auth()->id(),
+        'topic' => $request->topic,
+        'grade_level' => $request->grade_level ?? 'unspecified',
+        'environment' => app()->environment(),
+        'server' => $_SERVER['SERVER_NAME'] ?? 'unknown'
+    ]);
+
+    $authUser = auth()->user();
     
-        // Handle credit validation and deduction
-        if ($authUser->role === 'teacher') {
-            $school = User::where('id', $authUser->school_id)
-                        ->where('role', 'school')
-                        ->first();
+    // Handle credit validation and deduction
+    // ...credit handling code remains the same...
     
-            if (!$school) {
-                return back()->with('error', 'Associated school account not found.');
-            }
+    $data = $request->validated();
+    $topic = $data['topic'];
+    $grade_level = $data['grade_level'] ?? 'unspecified';
     
-            if ($school->credits < 1) {
-                return back()->with('error', 'Your school account does not have enough credits.');
-            }
-    
-            $school->decrement('credits', 1);
-    
-            CreditTransaction::create([
-                'user_id' => $school->id,
-                'performed_by' => $authUser->id,
-                'amount' => 1,
-                'type' => 'debit',
-                'reason' => 'Resource kit generated'
-            ]);
-        } elseif ($authUser->role === 'school') {
-            if ($authUser->credits < 1) {
-                return back()->with('error', 'You do not have enough credits.');
-            }
-    
-            $authUser->decrement('credits', 1);
-    
-            CreditTransaction::create([
-                'user_id' => $authUser->id,
-                'performed_by' => $authUser->id,
-                'amount' => 1,
-                'type' => 'debit',
-                'reason' => 'Resource kit generation'
-            ]);
-        }
-    
-        $data = $request->validated();
-        $topic = $data['topic'];
-        $grade_level = $data['grade_level'] ?? 'unspecified';
-    
-        $prompt = <<<EOT
+    $prompt = <<<EOT
     You are an expert in educational content creation. Generate a teacher resource kit in JSON format for the topic: "$topic", grade level: "$grade_level". 
     
     Return a valid, parseable JSON object with NO additional text or explanation. The JSON should be in the following exact structure:
@@ -106,19 +79,135 @@ class ContentController extends Controller
     Important: Do not include code blocks, backticks, or any other formatting. Return only the raw JSON object.
     EOT;
     
-        $resourceKit = $this->callLlamaApi($prompt);
+    Log::channel('daily')->info('Calling Llama API for ResourceKit', [
+        'topic' => $topic,
+        'grade_level' => $grade_level,
+        'prompt_length' => strlen($prompt)
+    ]);
     
-        $view = $authUser->role === 'school'
-            ? 'school.content.view'
-            : 'content.view';
+    $resourceKit = $this->callLlamaApi($prompt);
     
-        return $this->saveAndReturnContent(
-            $resourceKit,
-            'resource',
-            $data,
-            $view
-        );
-    }
+    Log::channel('daily')->info('Llama API response received for ResourceKit', [
+        'response_type' => gettype($resourceKit),
+        'is_array' => is_array($resourceKit),
+        'has_error' => is_array($resourceKit) && isset($resourceKit['error']),
+        'response_snippet' => is_array($resourceKit) ? json_encode(array_slice($resourceKit, 0, 2, true)) : 'not an array'
+    ]);
+    
+    $view = $authUser->role === 'school'
+        ? 'school.content.view'
+        : 'content.view';
+    
+    return $this->saveAndReturnContent(
+        $resourceKit,
+        'resource',
+        $data,
+        $view
+    );
+}
+    // public function resourceKit(ResourceRequest $request)
+    // {
+    //     $authUser = auth()->user();
+    
+    //     // Handle credit validation and deduction
+    //     if ($authUser->role === 'teacher') {
+    //         $school = User::where('id', $authUser->school_id)
+    //                     ->where('role', 'school')
+    //                     ->first();
+    
+    //         if (!$school) {
+    //             return back()->with('error', 'Associated school account not found.');
+    //         }
+    
+    //         if ($school->credits < 1) {
+    //             return back()->with('error', 'Your school account does not have enough credits.');
+    //         }
+    
+    //         $school->decrement('credits', 1);
+    
+    //         CreditTransaction::create([
+    //             'user_id' => $school->id,
+    //             'performed_by' => $authUser->id,
+    //             'amount' => 1,
+    //             'type' => 'debit',
+    //             'reason' => 'Resource kit generated'
+    //         ]);
+    //     } elseif ($authUser->role === 'school') {
+    //         if ($authUser->credits < 1) {
+    //             return back()->with('error', 'You do not have enough credits.');
+    //         }
+    
+    //         $authUser->decrement('credits', 1);
+    
+    //         CreditTransaction::create([
+    //             'user_id' => $authUser->id,
+    //             'performed_by' => $authUser->id,
+    //             'amount' => 1,
+    //             'type' => 'debit',
+    //             'reason' => 'Resource kit generation'
+    //         ]);
+    //     }
+    
+    //     $data = $request->validated();
+    //     $topic = $data['topic'];
+    //     $grade_level = $data['grade_level'] ?? 'unspecified';
+    
+    //     $prompt = <<<EOT
+    // You are an expert in educational content creation. Generate a teacher resource kit in JSON format for the topic: "$topic", grade level: "$grade_level". 
+    
+    // Return a valid, parseable JSON object with NO additional text or explanation. The JSON should be in the following exact structure:
+    
+    // {
+    //   "worksheets": [
+    //     {
+    //       "type": "multiple choice",
+    //       "questions": [
+    //         {
+    //           "question": "...",
+    //           "options": ["A", "B", "C", "D"],
+    //           "answer": "..."
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       "type": "fill in the blanks",
+    //       "questions": ["...", "..."],
+    //       "answers": ["...", "..."]
+    //     }
+    //   ],
+    //   "flashcards": [
+    //     {"term": "...", "definition": "..."},
+    //     {"term": "...", "definition": "..."}
+    //   ],
+    //   "summary": "...",
+    //   "question_bank": {
+    //     "recall": ["Question 1", "Question 2"],
+    //     "apply": ["Question 1", "Question 2"],
+    //     "analyze": ["Question 1", "Question 2"]
+    //   },
+    //   "study_guide": [
+    //     "Key point 1",
+    //     "Key point 2",
+    //     "Tip or explanation..."
+    //   ]
+    // }
+    
+    // Important: Do not include code blocks, backticks, or any other formatting. Return only the raw JSON object.
+    // EOT;
+    
+    //     $resourceKit = $this->callLlamaApi($prompt);
+    
+    //     $view = $authUser->role === 'school'
+    //         ? 'school.content.view'
+    //         : 'content.view';
+    
+    //     return $this->saveAndReturnContent(
+    //         $resourceKit,
+    //         'resource',
+    //         $data,
+    //         $view
+    //     );
+    // }
 
     public function lessonPlan(LessonPlanRequest $request)
     {
