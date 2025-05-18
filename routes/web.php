@@ -23,7 +23,7 @@ use App\Http\Controllers\Backend\AdminController as BackendAdminController;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');;
-Route::get('/', [HomeController::class, 'incontent.resourcedex'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
