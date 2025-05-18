@@ -18,32 +18,24 @@ class ContentController extends Controller
 {
     public function resourceKit(ResourceRequest $request)
     {
-        Log::info('Starting resourceKit function', ['request' => $request->all()]);
-
         $authUser = auth()->user();
-        Log::info('Authenticated user', ['user_id' => $authUser->id, 'role' => $authUser->role]);
-
+    
         // Handle credit validation and deduction
         if ($authUser->role === 'teacher') {
-            Log::info('Processing teacher role', ['school_id' => $authUser->school_id]);
             $school = User::where('id', $authUser->school_id)
                         ->where('role', 'school')
                         ->first();
-
+    
             if (!$school) {
-                Log::error('School account not found', ['school_id' => $authUser->school_id]);
                 return back()->with('error', 'Associated school account not found.');
             }
-
-            Log::info('School found', ['school_id' => $school->id, 'credits' => $school->credits]);
+    
             if ($school->credits < 1) {
-                Log::warning('Insufficient school credits', ['credits' => $school->credits]);
                 return back()->with('error', 'Your school account does not have enough credits.');
             }
-
+    
             $school->decrement('credits', 1);
-            Log::info('School credits decremented', ['school_id' => $school->id, 'new_credits' => $school->credits]);
-
+    
             CreditTransaction::create([
                 'user_id' => $school->id,
                 'performed_by' => $authUser->id,
@@ -51,17 +43,13 @@ class ContentController extends Controller
                 'type' => 'debit',
                 'reason' => 'Resource kit generated'
             ]);
-            Log::info('Credit transaction recorded for school', ['school_id' => $school->id]);
         } elseif ($authUser->role === 'school') {
-            Log::info('Processing school role', ['user_id' => $authUser->id, 'credits' => $authUser->credits]);
             if ($authUser->credits < 1) {
-                Log::warning('Insufficient user credits', ['credits' => $authUser->credits]);
                 return back()->with('error', 'You do not have enough credits.');
             }
-
+    
             $authUser->decrement('credits', 1);
-            Log::info('User credits decremented', ['user_id' => $authUser->id, 'new_credits' => $authUser->credits]);
-
+    
             CreditTransaction::create([
                 'user_id' => $authUser->id,
                 'performed_by' => $authUser->id,
@@ -69,17 +57,12 @@ class ContentController extends Controller
                 'type' => 'debit',
                 'reason' => 'Resource kit generation'
             ]);
-            Log::info('Credit transaction recorded for user', ['user_id' => $authUser->id]);
-        } else {
-            Log::error('Invalid user role', ['role' => $authUser->role]);
-            return back()->with('error', 'Invalid user role.');
         }
-
+    
         $data = $request->validated();
         $topic = $data['topic'];
         $grade_level = $data['grade_level'] ?? 'unspecified';
-        Log::info('Request data validated', ['topic' => $topic, 'grade_level' => $grade_level]);
-
+    
         $prompt = <<<EOT
     You are an expert in educational content creation. Generate a teacher resource kit in JSON format for the topic: "$topic", grade level: "$grade_level". 
     
@@ -122,35 +105,19 @@ class ContentController extends Controller
     
     Important: Do not include code blocks, backticks, or any other formatting. Return only the raw JSON object.
     EOT;
-
-        Log::debug('Generated prompt for Llama API', ['prompt' => $prompt]);
-
-        try {
-            $resourceKit = $this->callLlamaApi($prompt);
-            Log::info('Llama API call successful', ['response_length' => strlen($resourceKit)]);
-        } catch (\Exception $e) {
-            Log::error('Llama API call failed', ['error' => $e->getMessage()]);
-            return back()->with('error', 'Failed to generate resource kit. Please try again.');
-        }
-
+    
+        $resourceKit = $this->callLlamaApi($prompt);
+    
         $view = $authUser->role === 'school'
             ? 'school.content.view'
             : 'content.view';
-        Log::info('Selected view', ['view' => $view]);
-
-        try {
-            $result = $this->saveAndReturnContent(
-                $resourceKit,
-                'resource',
-                $data,
-                $view
-            );
-            Log::info('Content saved and returned', ['view' => $view]);
-            return $result;
-        } catch (\Exception $e) {
-            Log::error('Failed to save or return content', ['error' => $e->getMessage()]);
-            return back()->with('error', 'Failed to process resource kit. Please try again.');
-        }
+    
+        return $this->saveAndReturnContent(
+            $resourceKit,
+            'resource',
+            $data,
+            $view
+        );
     }
 
     public function lessonPlan(LessonPlanRequest $request)
