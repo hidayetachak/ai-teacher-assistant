@@ -17,26 +17,53 @@ use Illuminate\Support\Facades\Log;
 class ContentController extends Controller
 {
     public function resourceKit(ResourceRequest $request)
-{
-    // Start logging the request process
-    Log::channel('daily')->info('ResourceKit request started', [
-        'user_id' => auth()->id(),
-        'topic' => $request->topic,
-        'grade_level' => $request->grade_level ?? 'unspecified',
-        'environment' => app()->environment(),
-        'server' => $_SERVER['SERVER_NAME'] ?? 'unknown'
-    ]);
-
-    $authUser = auth()->user();
+    {
+        $authUser = auth()->user();
     
-    // Handle credit validation and deduction
-    // ...credit handling code remains the same...
+        // Handle credit validation and deduction
+        if ($authUser->role === 'teacher') {
+            $school = User::where('id', $authUser->school_id)
+                        ->where('role', 'school')
+                        ->first();
     
-    $data = $request->validated();
-    $topic = $data['topic'];
-    $grade_level = $data['grade_level'] ?? 'unspecified';
+            if (!$school) {
+                return back()->with('error', 'Associated school account not found.');
+            }
     
-    $prompt = <<<EOT
+            if ($school->credits < 1) {
+                return back()->with('error', 'Your school account does not have enough credits.');
+            }
+    
+            $school->decrement('credits', 1);
+    
+            CreditTransaction::create([
+                'user_id' => $school->id,
+                'performed_by' => $authUser->id,
+                'amount' => 1,
+                'type' => 'debit',
+                'reason' => 'Resource kit generated'
+            ]);
+        } elseif ($authUser->role === 'school') {
+            if ($authUser->credits < 1) {
+                return back()->with('error', 'You do not have enough credits.');
+            }
+    
+            $authUser->decrement('credits', 1);
+    
+            CreditTransaction::create([
+                'user_id' => $authUser->id,
+                'performed_by' => $authUser->id,
+                'amount' => 1,
+                'type' => 'debit',
+                'reason' => 'Resource kit generation'
+            ]);
+        }
+    
+        $data = $request->validated();
+        $topic = $data['topic'];
+        $grade_level = $data['grade_level'] ?? 'unspecified';
+    
+        $prompt = <<<EOT
     You are an expert in educational content creation. Generate a teacher resource kit in JSON format for the topic: "$topic", grade level: "$grade_level". 
     
     Return a valid, parseable JSON object with NO additional text or explanation. The JSON should be in the following exact structure:
@@ -79,135 +106,19 @@ class ContentController extends Controller
     Important: Do not include code blocks, backticks, or any other formatting. Return only the raw JSON object.
     EOT;
     
-    Log::channel('daily')->info('Calling Llama API for ResourceKit', [
-        'topic' => $topic,
-        'grade_level' => $grade_level,
-        'prompt_length' => strlen($prompt)
-    ]);
+        $resourceKit = $this->callLlamaApi($prompt);
     
-    $resourceKit = $this->callLlamaApi($prompt);
+        $view = $authUser->role === 'school'
+            ? 'school.content.view'
+            : 'content.view';
     
-    Log::channel('daily')->info('Llama API response received for ResourceKit', [
-        'response_type' => gettype($resourceKit),
-        'is_array' => is_array($resourceKit),
-        'has_error' => is_array($resourceKit) && isset($resourceKit['error']),
-        'response_snippet' => is_array($resourceKit) ? json_encode(array_slice($resourceKit, 0, 2, true)) : 'not an array'
-    ]);
-    
-    $view = $authUser->role === 'school'
-        ? 'school.content.view'
-        : 'content.view';
-    
-    return $this->saveAndReturnContent(
-        $resourceKit,
-        'resource',
-        $data,
-        $view
-    );
-}
-    // public function resourceKit(ResourceRequest $request)
-    // {
-    //     $authUser = auth()->user();
-    
-    //     // Handle credit validation and deduction
-    //     if ($authUser->role === 'teacher') {
-    //         $school = User::where('id', $authUser->school_id)
-    //                     ->where('role', 'school')
-    //                     ->first();
-    
-    //         if (!$school) {
-    //             return back()->with('error', 'Associated school account not found.');
-    //         }
-    
-    //         if ($school->credits < 1) {
-    //             return back()->with('error', 'Your school account does not have enough credits.');
-    //         }
-    
-    //         $school->decrement('credits', 1);
-    
-    //         CreditTransaction::create([
-    //             'user_id' => $school->id,
-    //             'performed_by' => $authUser->id,
-    //             'amount' => 1,
-    //             'type' => 'debit',
-    //             'reason' => 'Resource kit generated'
-    //         ]);
-    //     } elseif ($authUser->role === 'school') {
-    //         if ($authUser->credits < 1) {
-    //             return back()->with('error', 'You do not have enough credits.');
-    //         }
-    
-    //         $authUser->decrement('credits', 1);
-    
-    //         CreditTransaction::create([
-    //             'user_id' => $authUser->id,
-    //             'performed_by' => $authUser->id,
-    //             'amount' => 1,
-    //             'type' => 'debit',
-    //             'reason' => 'Resource kit generation'
-    //         ]);
-    //     }
-    
-    //     $data = $request->validated();
-    //     $topic = $data['topic'];
-    //     $grade_level = $data['grade_level'] ?? 'unspecified';
-    
-    //     $prompt = <<<EOT
-    // You are an expert in educational content creation. Generate a teacher resource kit in JSON format for the topic: "$topic", grade level: "$grade_level". 
-    
-    // Return a valid, parseable JSON object with NO additional text or explanation. The JSON should be in the following exact structure:
-    
-    // {
-    //   "worksheets": [
-    //     {
-    //       "type": "multiple choice",
-    //       "questions": [
-    //         {
-    //           "question": "...",
-    //           "options": ["A", "B", "C", "D"],
-    //           "answer": "..."
-    //         }
-    //       ]
-    //     },
-    //     {
-    //       "type": "fill in the blanks",
-    //       "questions": ["...", "..."],
-    //       "answers": ["...", "..."]
-    //     }
-    //   ],
-    //   "flashcards": [
-    //     {"term": "...", "definition": "..."},
-    //     {"term": "...", "definition": "..."}
-    //   ],
-    //   "summary": "...",
-    //   "question_bank": {
-    //     "recall": ["Question 1", "Question 2"],
-    //     "apply": ["Question 1", "Question 2"],
-    //     "analyze": ["Question 1", "Question 2"]
-    //   },
-    //   "study_guide": [
-    //     "Key point 1",
-    //     "Key point 2",
-    //     "Tip or explanation..."
-    //   ]
-    // }
-    
-    // Important: Do not include code blocks, backticks, or any other formatting. Return only the raw JSON object.
-    // EOT;
-    
-    //     $resourceKit = $this->callLlamaApi($prompt);
-    
-    //     $view = $authUser->role === 'school'
-    //         ? 'school.content.view'
-    //         : 'content.view';
-    
-    //     return $this->saveAndReturnContent(
-    //         $resourceKit,
-    //         'resource',
-    //         $data,
-    //         $view
-    //     );
-    // }
+        return $this->saveAndReturnContent(
+            $resourceKit,
+            'resource',
+            $data,
+            $view
+        );
+    }
 
     public function lessonPlan(LessonPlanRequest $request)
     {
@@ -456,162 +367,132 @@ class ContentController extends Controller
 
 
     private function callLlamaApi($promptContent, $maxRetries = 3)
-    {
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            try {
-                $response = Http::withToken(config('services.llama.api_key'))
-                    ->timeout(60)
-                    ->post('https://api.llama.com/v1/chat/completions', [
-                        'model' => 'Llama-4-Maverick-17B-128E-Instruct-FP8',
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => 'You are a helpful assistant that generates educational content in JSON format as specified.',
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => $promptContent,
-                            ],
+{
+    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+        try {
+            $response = Http::withToken(config('services.llama.api_key'))
+                ->timeout(60)
+                ->post('https://api.llama.com/v1/chat/completions', [
+                    'model' => 'Llama-4-Maverick-17B-128E-Instruct-FP8',
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are a helpful assistant that generates educational content in JSON format as specified.',
                         ],
-                        'max_tokens' => 2000,
-                    ]);
-    
-                Log::info('Llama API response attempt ' . $attempt, [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
+                        [
+                            'role' => 'user',
+                            'content' => $promptContent,
+                        ],
+                    ],
+                    'max_tokens' => 2000,
                 ]);
-    
-                if ($response->successful()) {
-                    $responseData = $response->json();
+
+            Log::info('Llama API response attempt ' . $attempt, [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+                
+                if (isset($responseData['completion_message']['content']['text'])) {
+                    $text = $responseData['completion_message']['content']['text'];
                     
-                    if (isset($responseData['completion_message']['content']['text'])) {
-                        $text = $responseData['completion_message']['content']['text'];
+                    // Find the JSON content using regex - extract everything between { and } including nested braces
+                    if (preg_match('/(\{(?:[^{}]|(?R))*\})/s', $text, $matches)) {
+                        $jsonContent = $matches[0];
                         
-                        // Improved JSON extraction - use a more robust method
-                        $text = trim($text);
+                        // Log the extracted JSON for debugging
+                        Log::info('Extracted JSON content', ['content' => $jsonContent]);
                         
-                        // Try direct JSON decode first (in case the response is clean JSON)
-                        $decodedContent = json_decode($text, true);
+                        // Decode the JSON string
+                        $decodedContent = json_decode($jsonContent, true);
+                        
                         if (json_last_error() === JSON_ERROR_NONE) {
                             return $decodedContent;
                         }
                         
-                        // If that fails, try to extract JSON with regex
-                        if (preg_match('/(\{(?:[^{}]|(?R))*\})/s', $text, $matches)) {
-                            $jsonContent = $matches[0];
-                            
-                            // Log the extracted JSON for debugging
-                            Log::info('Extracted JSON content', ['content' => $jsonContent]);
-                            
-                            // Decode the JSON string
-                            $decodedContent = json_decode($jsonContent, true);
-                            
-                            if (json_last_error() === JSON_ERROR_NONE) {
-                                return $decodedContent;
-                            }
-                            
-                            Log::warning('JSON decoding failed for attempt ' . $attempt, [
-                                'json_error' => json_last_error_msg(),
-                                'content' => $jsonContent,
-                            ]);
-                        } else {
-                            // Try to find JSON by looking for the first { and last }
-                            $firstBrace = strpos($text, '{');
-                            $lastBrace = strrpos($text, '}');
-                            
-                            if ($firstBrace !== false && $lastBrace !== false && $lastBrace > $firstBrace) {
-                                $jsonContent = substr($text, $firstBrace, $lastBrace - $firstBrace + 1);
-                                Log::info('Alternative JSON extraction', ['content' => $jsonContent]);
-                                
-                                $decodedContent = json_decode($jsonContent, true);
-                                if (json_last_error() === JSON_ERROR_NONE) {
-                                    return $decodedContent;
-                                }
-                            }
-                            
-                            Log::warning('Could not extract JSON from response', [
-                                'text' => $text
-                            ]);
-                        }
+                        Log::warning('JSON decoding failed for attempt ' . $attempt, [
+                            'json_error' => json_last_error_msg(),
+                            'content' => $jsonContent,
+                        ]);
+                    } else {
+                        Log::warning('Could not extract JSON from response', [
+                            'text' => $text
+                        ]);
                     }
                 }
-    
-                Log::warning('Llama API failed attempt ' . $attempt, [
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                ]);
-    
-                if ($attempt < $maxRetries) {
-                    usleep(2000 * 1000);
-                }
-            } catch (\Exception $e) {
-                Log::error('Llama API exception attempt ' . $attempt, [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                if ($attempt < $maxRetries) {
-                    usleep(2000 * 1000);
-                }
+            }
+
+            Log::warning('Llama API failed attempt ' . $attempt, [
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]);
+
+            if ($attempt < $maxRetries) {
+                usleep(2000 * 1000);
+            }
+        } catch (\Exception $e) {
+            Log::error('Llama API exception attempt ' . $attempt, [
+                'error' => $e->getMessage(),
+            ]);
+            if ($attempt < $maxRetries) {
+                usleep(2000 * 1000);
             }
         }
-    
-        return ['error' => "Failed to generate content after $maxRetries attempts."];
     }
 
-    private function saveAndReturnContent($contentData, $type, $data, $view)
-    {
-        // Check if we have an error response
-        if (is_array($contentData) && isset($contentData['error'])) {
-            Log::error('Content generation error', [
-                'error' => $contentData['error'],
-                'type' => $type,
-                'topic' => $data['topic'] ?? null
-            ]);
-            return back()->with('error', $contentData['error']);
-        }
-        
-        // Ensure contentData is an array
-        if (!is_array($contentData)) {
-            Log::error('Content data is not an array', [
-                'type' => $type,
-                'data' => $contentData
-            ]);
-            return back()->with('error', 'Invalid content format. Expected an array.');
-        }
-        
-        try {
-            // Encode the content data as JSON
-            $jsonData = json_encode($contentData, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
-            
-            $content = Content::create([
-                'user_id' => auth()->id(),
-                'type' => $type,
-                'topic' => $data['topic'] ?? null,
-                'grade_level' => $data['grade_level'] ?? null,
-                'num_questions' => $data['num_questions'] ?? null,
-                'question_type' => $data['question_type'] ?? null,
-                'duration' => $data['duration'] ?? null,
-                'data' => $jsonData,
-                'tags' => $data['tags'] ?? [],
-            ]);
-    
-            Usage::create([
-                'user_id' => auth()->id(),
-                'content_id' => $content->id,
-                'type' => $type,
-            ]);
-    
-            return view($view, compact('content'));
-        } catch (\Exception $e) {
-            Log::error('Error saving content', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'type' => $type,
-                'data' => $contentData
-            ]);
-            return back()->with('error', 'Failed to save content: ' . $e->getMessage());
-        }
+    return ['error' => "Failed to generate content after $maxRetries attempts."];
+}
+
+private function saveAndReturnContent($contentData, $type, $data, $view)
+{
+    // Check if we have an error response
+    if (is_array($contentData) && isset($contentData['error'])) {
+        return back()->with('error', $contentData['error']);
     }
+    
+    // Ensure contentData is an array
+    if (!is_array($contentData)) {
+        Log::error('Content data is not an array', [
+            'type' => $type,
+            'data' => $contentData
+        ]);
+        return back()->with('error', 'Invalid content format. Expected an array.');
+    }
+    
+    try {
+        // Encode the content data as JSON
+        $jsonData = json_encode($contentData, JSON_THROW_ON_ERROR);
+        
+        $content = Content::create([
+            'user_id' => auth()->id(),
+            'type' => $type,
+            'topic' => $data['topic'] ?? null,
+            'grade_level' => $data['grade_level'] ?? null,
+            'num_questions' => $data['num_questions'] ?? null,
+            'question_type' => $data['question_type'] ?? null,
+            'duration' => $data['duration'] ?? null,
+            'data' => $jsonData,
+            'tags' => $data['tags'] ?? [],
+        ]);
+
+        Usage::create([
+            'user_id' => auth()->id(),
+            'content_id' => $content->id,
+            'type' => $type,
+        ]);
+
+        return view($view, compact('content'));
+    } catch (\Exception $e) {
+        Log::error('Error saving content', [
+            'message' => $e->getMessage(),
+            'type' => $type,
+            'data' => $contentData
+        ]);
+        return back()->with('error', 'Failed to save content: ' . $e->getMessage());
+    }
+}
 
     public function view($id)
 {

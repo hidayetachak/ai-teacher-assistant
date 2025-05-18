@@ -19,6 +19,33 @@ use App\Http\Middleware\VerifyRole;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Backend\UserController as BackendUserController;
 use App\Http\Controllers\Backend\AdminController as BackendAdminController;
+// Add this to your routes/web.php file
+Route::get('/phpinfo', function () {
+    $info = [
+        'PHP Version' => phpversion(),
+        'Server Software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+        'Server Name' => $_SERVER['SERVER_NAME'] ?? 'Unknown',
+        'Document Root' => $_SERVER['DOCUMENT_ROOT'] ?? 'Unknown',
+        'JSON Support' => extension_loaded('json') ? 'Enabled' : 'Disabled',
+        'cURL Support' => extension_loaded('curl') ? 'Enabled' : 'Disabled',
+        'OpenSSL Support' => extension_loaded('openssl') ? 'Enabled' : 'Disabled',
+        'PCRE Support' => extension_loaded('pcre') ? 'Enabled' : 'Disabled',
+        'Memory Limit' => ini_get('memory_limit'),
+        'Max Execution Time' => ini_get('max_execution_time'),
+        'Post Max Size' => ini_get('post_max_size'),
+        'Upload Max Filesize' => ini_get('upload_max_filesize'),
+        'JSON Error Constants' => [
+            'JSON_ERROR_NONE' => JSON_ERROR_NONE,
+            'JSON_ERROR_DEPTH' => JSON_ERROR_DEPTH,
+            'JSON_ERROR_STATE_MISMATCH' => JSON_ERROR_STATE_MISMATCH,
+            'JSON_ERROR_CTRL_CHAR' => JSON_ERROR_CTRL_CHAR,
+            'JSON_ERROR_SYNTAX' => JSON_ERROR_SYNTAX,
+            'JSON_ERROR_UTF8' => JSON_ERROR_UTF8
+        ]
+    ];
+    
+    return response()->json($info);
+})->middleware(['auth']); // Make sure only authenticated users can access this
 Route::get('/', function () {
     return view('welcome');
 })->name('home');;
