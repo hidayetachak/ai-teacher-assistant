@@ -14,7 +14,7 @@
     </div>
 
     <div class="card-body">
-        <form action="{{ route('content.resource') }}" method="POST">
+        <form action="{{ route('resource.store') }}" method="POST">
             @csrf
 
             <div class="mb-3">
