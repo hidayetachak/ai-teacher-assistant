@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/content/{id}/view', [ContentController::class, 'view'])->name('content.view');
     Route::delete('/content/{id}', [ContentController::class, 'destroy'])->name('content.destroy');
 
-    // Direct use of middleware class instead of alias
+    
     
     // Teacher and User Routes
     Route::middleware(VerifyRole::class . ':teacher')->group(function () {
